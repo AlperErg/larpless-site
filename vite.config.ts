@@ -1,12 +1,30 @@
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
 import { defineConfig, type Plugin } from 'vite';
 
 const SITE_DIR = dirname(fileURLToPath(import.meta.url));
-const REPO_DIR = resolve(SITE_DIR, '..');
-const REPO_URL = 'https://github.com/AlperErg/larpless/blob/main/';
+/** The app repository, which holds GUIDE.md, PRIVACY.md and TERMS.md next to the code they describe. */
+const APP_REPO = 'AlperErg/larpless';
+const REPO_URL = `https://github.com/${APP_REPO}/blob/main/`;
+
+/**
+ * Where the documents come from: by default the app repository's main branch on GitHub
+ * (LARPLESS_DOCS_REF picks another branch, tag or commit). LARPLESS_DOCS=<path to a larpless
+ * checkout> reads them from disk instead, and the dev server then reloads when you edit them.
+ */
+const DOCS_DIR = process.env.LARPLESS_DOCS?.trim() ? resolve(process.env.LARPLESS_DOCS.trim()) : undefined;
+const DOCS_REF = process.env.LARPLESS_DOCS_REF?.trim() || 'main';
+
+async function readDoc(file: string): Promise<string> {
+  if (DOCS_DIR) return readFile(resolve(DOCS_DIR, file), 'utf8');
+  const url = `https://raw.githubusercontent.com/${APP_REPO}/${DOCS_REF}/${file}`;
+  const res = await fetch(url);
+  // Never publish an empty or error page in place of the privacy policy: fail the build instead.
+  if (!res.ok) throw new Error(`legal: ${url} returned ${res.status} ${res.statusText}`);
+  return res.text();
+}
 
 const ORIGIN_TOKEN = '__SITE_ORIGIN__';
 
@@ -106,7 +124,7 @@ function seo(): Plugin {
   };
 }
 
-/** The documents the guide and legal pages render, from the repository root, and where each lives on the site. */
+/** The documents the guide and legal pages render, from the app repository's root, and where each lives on the site. */
 const LEGAL_PAGES: Record<string, string> = { 'GUIDE.md': '../guide/', 'PRIVACY.md': '../privacy/', 'TERMS.md': '../terms/' };
 const LEGAL_MARKER = /<!--\s*legal:([A-Z]+\.md)\s*-->/;
 
@@ -121,7 +139,7 @@ function slug(html: string): string {
     .replace(/\s/g, '-');
 }
 
-/** Links between the documents go to their pages; other repository files go to GitHub. */
+/** Links between the documents go to their pages; other app repository files go to GitHub. */
 function legalHref(href: string): string {
   const [path, hash] = href.split('#');
   if (!path || /^[a-z]+:/i.test(href)) return href;
@@ -151,14 +169,14 @@ const FIGURES: Record<string, string> = {
 };
 const FIGURE_MARKER = /<!--\s*figure:([a-z-]+)\s*-->/g;
 
-function renderLegal(file: string): string {
+async function renderLegal(file: string): Promise<string> {
   const marked = new Marked({
     gfm: true,
     walkTokens(token) {
       if (token.type === 'link') token.href = legalHref(token.href);
     },
   });
-  const html = marked.parse(readFileSync(resolve(REPO_DIR, file), 'utf8'), { async: false });
+  const html = marked.parse(await readDoc(file), { async: false });
   return html
     .replace(FIGURE_MARKER, (_m, name: string) => {
       const figure = FIGURES[name];
@@ -171,23 +189,26 @@ function renderLegal(file: string): string {
 }
 
 /**
- * /guide/, /privacy/ and /terms/ are GUIDE.md, PRIVACY.md and TERMS.md at the repository root, rendered at build time
- * (and on every request in dev), so the site never holds a second, drifting copy of them.
+ * /guide/, /privacy/ and /terms/ are GUIDE.md, PRIVACY.md and TERMS.md from the app repository, rendered at build
+ * time (and on every request in dev), so the site never holds a second, drifting copy of them. A change to them on
+ * the app repository's main branch triggers a Netlify build through its site-docs workflow.
  */
 function legal(): Plugin {
   return {
     name: 'legal',
     transformIndexHtml: {
       order: 'pre',
-      handler(html) {
-        return html.replace(LEGAL_MARKER, (_m, file: string) => {
-          if (!(file in LEGAL_PAGES)) throw new Error(`legal: unknown document ${file}`);
-          return renderLegal(file);
-        });
+      async handler(html) {
+        const file = html.match(LEGAL_MARKER)?.[1];
+        if (!file) return html;
+        if (!(file in LEGAL_PAGES)) throw new Error(`legal: unknown document ${file}`);
+        const rendered = await renderLegal(file);
+        return html.replace(LEGAL_MARKER, () => rendered);
       },
     },
     configureServer(server) {
-      const files = Object.keys(LEGAL_PAGES).map((f) => resolve(REPO_DIR, f));
+      if (!DOCS_DIR) return;
+      const files = Object.keys(LEGAL_PAGES).map((f) => resolve(DOCS_DIR, f));
       server.watcher.add(files);
       server.watcher.on('change', (changed) => {
         if (files.includes(changed)) server.ws.send({ type: 'full-reload' });
