@@ -60,38 +60,42 @@ function paintHeat() {
   });
 }
 
+/**
+ * Desktop hero: the iPad's wrapper is position: sticky (style.css), and this scales the iPad from its
+ * starting width up to full size, which fills the window below the header. It grows over the scroll
+ * up to and into the pinned stretch, holds at full size for the rest of it, then the page scrolls on.
+ */
 function ipadScroll() {
+  const track = document.querySelector<HTMLElement>('#ipad-track');
   const card = document.querySelector<HTMLElement>('#ipad');
-  if (!card) return;
+  const pin = card?.parentElement;
+  if (!track || !card || !pin) return;
 
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  // The tilt needs room around the frame. iPhone and iPad viewports don't have it.
-  const room = window.matchMedia('(min-width: 1100px) and (min-height: 900px)');
-
-  const clear = () => {
-    card.classList.remove('ipad-scroll');
-    card.style.transform = '';
-  };
+  // Same query as the pinned layout in style.css; elsewhere the iPad is a plain static frame.
+  const pinned = window.matchMedia(
+    '(min-width: 900px) and (min-height: 600px) and (prefers-reduced-motion: no-preference)',
+  );
+  /** The frame's width before it grows (px). */
+  const startWidth = 1024;
+  /** Share of the pinned stretch spent growing; the rest holds it at full size. */
+  const grow = 0.36;
 
   let frame = 0;
   const apply = () => {
     frame = 0;
-    if (reduce.matches || !room.matches) {
-      clear();
-      return;
-    }
-
-    if (CSS.supports('animation-timeline', 'scroll()')) {
-      card.classList.add('ipad-scroll');
+    if (!pinned.matches) {
       card.style.transform = '';
       return;
     }
-
-    const range = window.innerHeight * 0.85;
-    const progress = Math.min(1, Math.max(0, window.scrollY / range));
-    const scale = 1.05 + (1 - 1.05) * progress;
-    const rotate = 18 * (1 - progress);
-    card.style.transform = `rotateX(${rotate}deg) scale(${scale})`;
+    // offsetWidth ignores transforms, so this is the full-size width.
+    const startScale = Math.min(1, Math.min(startWidth, track.clientWidth) / card.offsetWidth);
+    const trackTop = track.getBoundingClientRect().top + window.scrollY;
+    const stickAt = parseFloat(getComputedStyle(pin).top) || 0;
+    const pinnedFor = track.offsetHeight - pin.offsetHeight;
+    const from = Math.max(0, trackTop - window.innerHeight);
+    const to = trackTop - stickAt + pinnedFor * grow;
+    const progress = Math.min(1, Math.max(0, (window.scrollY - from) / (to - from)));
+    card.style.transform = `scale(${startScale + (1 - startScale) * progress})`;
   };
   const onScroll = () => {
     if (frame) return;
@@ -101,8 +105,81 @@ function ipadScroll() {
   apply();
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll);
+  pinned.addEventListener('change', apply);
+}
+
+/**
+ * The hero demo loops muted and pauses while off screen. "Play with sound" restarts it with the voiceover for one
+ * pass, then it goes back to looping muted. With reduced motion it doesn't autoplay: the poster stays up, and the
+ * button or the native controls start it.
+ */
+function bindDemo() {
+  const video = document.querySelector<HTMLVideoElement>('#demo');
+  const button = document.querySelector<HTMLButtonElement>('#demo-sound');
+  const label = button?.querySelector('span');
+  if (!video || !button || !label) return;
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let listening = false; // a pass with sound, started from the button
+  let onScreen = true;
+  let last = 0;
+
+  const render = () => {
+    button.setAttribute('aria-pressed', String(!video.muted));
+    label.textContent = !listening ? 'Play with sound' : video.muted ? 'Unmute' : 'Mute';
+  };
+  const apply = () => {
+    video.controls = reduce.matches;
+    if (reduce.matches && !listening) {
+      if (!onScreen) video.pause();
+      return;
+    }
+    if (onScreen) void video.play().catch(() => {});
+    else video.pause();
+  };
+  const endPass = () => {
+    listening = false;
+    video.muted = true;
+    if (reduce.matches) {
+      video.pause();
+      video.currentTime = 0;
+    }
+    render();
+  };
+
+  if (reduce.matches) {
+    video.removeAttribute('autoplay');
+    video.pause();
+  }
+
+  button.addEventListener('click', () => {
+    if (!listening) {
+      listening = true;
+      last = 0;
+      video.currentTime = 0;
+      video.muted = false;
+    } else {
+      video.muted = !video.muted;
+    }
+    render();
+    apply();
+  });
+
+  // The loop restarting means the pass with sound is over.
+  video.addEventListener('timeupdate', () => {
+    if (listening && video.currentTime < last - 1) endPass();
+    last = video.currentTime;
+  });
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      apply();
+    }).observe(video);
+  }
   reduce.addEventListener('change', apply);
-  room.addEventListener('change', apply);
+  render();
+  apply();
 }
 
 function revealOnScroll() {
@@ -509,12 +586,68 @@ function bindMenu() {
   });
 }
 
+/** Model names under "How it works": hover or focus shows them, a tap toggles, Escape closes. */
+function bindModels() {
+  const models = Array.from(document.querySelectorAll<HTMLElement>('.model'));
+  const place = (model: HTMLElement) => {
+    const card = model.querySelector<HTMLElement>('.model-card');
+    if (!card) return;
+    card.style.setProperty('--card-x', '0px');
+    const box = card.getBoundingClientRect();
+    const gutter = 16;
+    const over = box.right - (document.documentElement.clientWidth - gutter);
+    const shift = over > 0 ? -over : 0;
+    const under = box.left + shift - gutter;
+    card.style.setProperty('--card-x', `${under < 0 ? shift - under : shift}px`);
+  };
+  const setOpen = (model: HTMLElement, open: boolean) => {
+    model.classList.toggle('open', open);
+    model.querySelector('.model-term')?.setAttribute('aria-expanded', String(open));
+  };
+  for (const model of models) {
+    const term = model.querySelector<HTMLButtonElement>('.model-term');
+    if (!term) continue;
+    model.addEventListener('pointerenter', () => {
+      model.classList.remove('closed');
+      place(model);
+    });
+    term.addEventListener('focus', () => {
+      model.classList.remove('closed');
+      place(model);
+    });
+    term.addEventListener('click', () => {
+      const open = !model.classList.contains('open');
+      for (const other of models) if (other !== model) setOpen(other, false);
+      model.classList.remove('closed');
+      setOpen(model, open);
+      if (open) place(model);
+      else model.classList.add('closed');
+    });
+  }
+  document.addEventListener('click', (event) => {
+    for (const model of models) if (!model.contains(event.target as Node)) setOpen(model, false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    for (const model of models) {
+      if (model.classList.contains('open') || model.matches(':hover, :focus-within')) {
+        setOpen(model, false);
+        model.classList.add('closed');
+      }
+    }
+  });
+  for (const model of models) model.addEventListener('pointerleave', () => model.classList.remove('closed'));
+  window.addEventListener('resize', () => models.forEach((model) => model.classList.contains('open') && place(model)));
+}
+
 paintHeat();
 bindPanelDemo();
 revealOnScroll();
 ipadScroll();
+bindDemo();
 bindScoreBar();
 bindTerminal();
 bindDownload();
 tuckHeader();
 bindMenu();
+bindModels();

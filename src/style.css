@@ -350,10 +350,6 @@ a:hover {
 }
 
 .scroll-stage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: auto;
   position: relative;
   padding: 0.25rem 0 0.5rem;
 }
@@ -361,7 +357,6 @@ a:hover {
 .scroll-scene {
   width: 100%;
   padding: 1.5rem 0 0;
-  perspective: 1000px;
 }
 
 .scroll-copy {
@@ -369,13 +364,17 @@ a:hover {
   margin: 0 auto;
 }
 
+/* The gap between the hero copy and the iPad. */
+.ipad-track {
+  margin-top: 2.5rem;
+}
+
 .ipad {
-  /* Fit the frame to the viewport: full screenshot, no tilt, no empty scroll runway. */
-  width: min(100%, calc((100dvh - 17rem) * 1804 / 1291));
+  /* Fit the frame to the viewport: the whole demo on the first screen. */
+  width: min(100%, calc((100dvh - 19rem) * 16 / 9));
   max-width: 64rem;
   height: auto;
-  aspect-ratio: 1804 / 1291;
-  margin: 0.65rem auto 0;
+  margin: 0 auto;
   padding: 0.5rem;
   border: 3px solid #6c6c6c;
   border-radius: 22px;
@@ -387,45 +386,82 @@ a:hover {
     0 84px 50px #00000026,
     0 149px 60px #0000000a,
     0 233px 65px #00000003;
-  transform-origin: center bottom;
-  transform: none;
-}
-
-.ipad-scroll {
-  animation: ipad-settle linear both;
-  animation-timeline: scroll(root);
-  animation-range: 0 85vh;
-}
-
-@keyframes ipad-settle {
-  from {
-    transform: rotateX(18deg) scale(1.05);
-  }
-  to {
-    transform: rotateX(0deg) scale(1);
-  }
+  transform-origin: center top;
 }
 
 .ipad-screen {
-  height: 100%;
+  position: relative;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 16px;
-  background: #111;
+  /* The video's own backdrop colour, so the frame never flashes a different shade while it loads. */
+  background: var(--bg);
 }
 
-.ipad-screen img {
+.ipad-screen video {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
-  border: 0;
-  border-radius: 0;
+}
+
+/* Top left: the one corner the demo's zooms and captions leave free. */
+.demo-sound {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 14px 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(16, 17, 15, 0.72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--ink);
+  font: 500 14px/1 var(--sans);
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.demo-sound:hover {
+  background: rgba(16, 17, 15, 0.88);
+  border-color: rgba(244, 241, 234, 0.3);
+}
+
+.demo-sound:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.demo-sound .ico {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.demo-sound .spk {
+  fill: currentColor;
+}
+
+.demo-sound[aria-pressed="false"] .wave,
+.demo-sound[aria-pressed="true"] .mute {
+  display: none;
 }
 
 @media (min-width: 768px) {
   .scroll-scene {
     padding-top: 2.75rem;
+  }
+
+  .ipad-track {
+    margin-top: 3.5rem;
   }
 
   .ipad {
@@ -435,32 +471,47 @@ a:hover {
   }
 }
 
-/* The settling tilt needs margin around the frame. Phones and iPads stay flat. */
-@media (min-width: 1100px) and (min-height: 900px) {
-  .scroll-stage {
-    height: 80rem;
-    padding: 5rem 0;
+/* Desktop: the iPad pins under the header and grows until it fills the window below it (ipadScroll()
+   in main.ts sets the scale from the scroll position), holds there, then the track ends and the page
+   scrolls on past it. Keep this media query in sync with ipadScroll(). */
+@media (min-width: 900px) and (min-height: 600px) and (prefers-reduced-motion: no-preference) {
+  /* At full size the frame is wider than the 1280px column; it stays inside the window (see width
+     below), so the hero mustn't clip it. */
+  .hero {
+    overflow-x: visible;
   }
 
-  .scroll-scene {
-    padding: 6rem 0 8rem;
+  .scroll-stage {
+    padding-bottom: 0;
+  }
+
+  .ipad-track {
+    --pin-h: calc(100dvh - var(--header) - env(safe-area-inset-top));
+    /* The pin itself plus the distance it stays pinned for. */
+    height: calc(var(--pin-h) + 150vh);
+  }
+
+  .ipad-pin {
+    position: sticky;
+    top: calc(var(--header) + env(safe-area-inset-top));
+    height: var(--pin-h);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 1.5rem 0;
   }
 
   .ipad {
-    width: 100%;
-    height: 40rem;
-    aspect-ratio: auto;
-    margin-top: 1.75rem;
+    /* Full size: as wide as the window allows while the whole frame (1.5rem padding and a 4px border
+       a side) fits the pinned height. The scroll scales it down from here, so the video stays sharp. */
+    flex: none;
+    width: min(calc(100vw - 4rem), calc((var(--pin-h) - 6rem - 8px) * 16 / 9 + 3rem + 8px));
+    max-width: none;
+    margin: 0;
     padding: 1.5rem;
-    border-width: 4px;
     border-radius: 30px;
-    transform: rotateX(18deg) scale(1.05);
-  }
-}
-
-@media (max-width: 1099px), (max-height: 899px) {
-  .ipad-scroll {
-    animation: none;
+    transform: scale(0.7);
+    will-change: transform;
   }
 }
 
@@ -481,27 +532,43 @@ a:hover {
     margin-top: 16px;
   }
 
+  .ipad-track {
+    margin-top: 1.5rem;
+  }
+
   .ipad {
-    width: min(100%, calc((100dvh - 11rem) * 1804 / 1291));
-    margin-top: 0.5rem;
+    width: min(100%, calc((100dvh - 12rem) * 16 / 9));
   }
 }
 
-/* On phones the whole window shrinks past reading size, so the frame zooms in on
-   the main column: the title, Start session, Pomodoro and the streak (x 460–1380, y 30–765 of 1804×1291).
-   Re-measure these if home.webp changes. */
+/* On phones a 16:9 desktop shrinks past reading size, so they get the square cut
+   (demo-square*.mp4, picked by the <source media> in index.html): tighter zooms, bigger captions. */
 @media (max-width: 600px) {
   .ipad {
     width: 100%;
-    aspect-ratio: 920 / 735;
   }
 
-  .ipad-screen img {
-    width: 196.09%;
-    max-width: none;
-    height: auto;
-    margin: -3.26% 0 0 -50%;
-    object-fit: fill;
+  .ipad-screen {
+    aspect-ratio: 1;
+  }
+
+  /* Icon only: the square cut's panel close-ups reach almost to the top-left corner. */
+  .demo-sound {
+    top: 8px;
+    left: 8px;
+    justify-content: center;
+    width: 34px;
+    min-height: 34px;
+    padding: 0;
+  }
+
+  .demo-sound span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
@@ -1254,6 +1321,111 @@ figure img {
   margin-top: 8px;
   color: var(--muted);
   font-size: 15px;
+}
+
+/* Model names behind the plain wording in "How it works". */
+.model {
+  position: relative;
+  display: inline;
+}
+
+.model-term {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--faint);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 180ms ease;
+}
+
+.model-term:hover,
+.model.open .model-term {
+  text-decoration-color: var(--ink);
+}
+
+.model-term:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.model-card {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  left: var(--card-x, 0px);
+  display: grid;
+  gap: 8px;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #1a1b18;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 160ms ease, transform 200ms var(--ease), visibility 0s linear 200ms;
+}
+
+/* Bridges the gap so the pointer can move from the word onto the panel. */
+.model-card::before {
+  content: "";
+  position: absolute;
+  inset: -12px 0 auto;
+  height: 12px;
+}
+
+.model-row b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.model:hover .model-card,
+.model:focus-within .model-card,
+.model.open .model-card {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 160ms ease, transform 200ms var(--ease), visibility 0s;
+}
+
+.model.closed .model-card {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Keeps an open card above the demo stage, which sits later in the page with its own transform. */
+#how .steps {
+  position: relative;
+  z-index: 2;
+}
+
+.how-more {
+  margin: -16px 0 32px;
+}
+
+.how-more .ghost {
+  margin-left: -8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .model-card {
+    transform: none;
+  }
 }
 
 /* A ghost link inside a step: the pill's padding is pulled back so its text lines up with the step's. */

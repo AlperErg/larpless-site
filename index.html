@@ -37,7 +37,7 @@
     <meta name="twitter:image:alt" content="LarpLess. Break down your study session into what you were actually doing." />
     <link rel="icon" href="./logo.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./logo.png" />
-    <link rel="preload" href="./home.webp" as="image" type="image/webp" />
+    <link rel="preload" href="./demo-poster.webp" as="image" type="image/webp" fetchpriority="high" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -66,6 +66,15 @@
               "Pomodoro timer",
               "Share session stats with friends"
             ]
+          },
+          {
+            "@type": "VideoObject",
+            "name": "LarpLess demo",
+            "description": "A study session in LarpLess: a maths tutorial and a course page are labelled as study, WhatsApp and Instagram as distracted, then the session score, its labelled checks and the Friends feed.",
+            "thumbnailUrl": "__SITE_ORIGIN__/demo-poster.webp",
+            "contentUrl": "__SITE_ORIGIN__/demo.mp4",
+            "uploadDate": "2026-11-19",
+            "duration": "PT53S"
           }
         ]
       }
@@ -123,16 +132,36 @@
                 <a class="ghost" href="https://github.com/AlperErg/larpless" rel="noopener" data-umami-event="GitHub: Hero"><svg class="gh-mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span>Free and open source</span></a>
               </div>
             </div>
-            <div class="ipad" id="ipad">
-              <div class="ipad-screen">
-                <img
-                  src="./home.webp"
-                  width="1804"
-                  height="1291"
-                  alt="LarpLess home screen: Start session, Pomodoro presets, a streak heatmap, and recent sessions"
-                  fetchpriority="high"
-                  draggable="false"
-                />
+            <div class="ipad-track" id="ipad-track">
+              <div class="ipad-pin">
+                <div class="ipad" id="ipad">
+                  <div class="ipad-screen">
+                    <!-- Built by brand/demo-video (Remotion). Phones get a square cut with larger captions;
+                         AV1 where the browser decodes it, H.264 otherwise. -->
+                    <video
+                      id="demo"
+                      width="1920"
+                      height="1080"
+                      poster="./demo-poster.webp"
+                      autoplay
+                      muted
+                      loop
+                      playsinline
+                      preload="metadata"
+                      disablepictureinpicture
+                      aria-label="Demo: LarpLess labels a maths tutorial and a course page as study, WhatsApp and Instagram as distracted, then shows the session score, its labelled checks and the Friends feed"
+                    >
+                      <source src="./demo-square-av1.mp4" type='video/mp4; codecs="av01.0.08M.08"' media="(max-width: 600px)" />
+                      <source src="./demo-square.mp4" type='video/mp4; codecs="avc1.640029"' media="(max-width: 600px)" />
+                      <source src="./demo-av1.mp4" type='video/mp4; codecs="av01.0.08M.08"' />
+                      <source src="./demo.mp4" type='video/mp4; codecs="avc1.640029"' />
+                    </video>
+                    <button type="button" class="demo-sound" id="demo-sound" aria-pressed="false" data-umami-event="Demo: Sound">
+                      <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path class="spk" d="M2.5 6.2h2.2L8 3.5v9L4.7 9.8H2.5z"/><path class="wave" d="M10.6 5.8a3 3 0 0 1 0 4.4M12.4 4a5.6 5.6 0 0 1 0 8"/><path class="mute" d="M10.5 6l3.5 4M14 6l-3.5 4"/></svg>
+                      <span>Play with sound</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -220,19 +249,18 @@
           <ol class="steps">
             <li>
               <h3>The screen</h3>
-              <p>Known distractions and study tools are recognised from the app and window title alone. Otherwise a screenshot is read by an AI model on your computer, which judges what's on screen: a YouTube lecture counts as study, YouTube Shorts don't.</p>
+              <p>Known distractions and study tools are recognised from the app and window title alone. Otherwise a screenshot is read by an <span class="model"><button type="button" class="model-term" aria-expanded="false" aria-describedby="model-screen">AI model</button><span class="model-card" role="tooltip" id="model-screen"><span class="model-row"><b>Vision LLM</b> <code>qwen3-vl:2b</code> through Ollama, about 1.9 GB.</span><span class="model-row"><b>Or the on-device classifier</b> SigLIP 2, OCR and MiniLM on ONNX Runtime, about 460 MB, no Ollama needed.</span></span></span> on your computer, which judges what's on screen: a YouTube lecture counts as study, YouTube Shorts don't.</p>
             </li>
             <li>
               <h3>The webcam</h3>
-              <p>Every second, an on-device vision model checks that you're there and looks for a phone. You are marked as distracted if you have your phone at hand or marked away if you are away.</p>
-            </li>
-            <li>
-              <h3>Your own courses</h3>
-              <p>Dozens of subjects are recognised out of the box. For a label of your own, add a course on the Subjects page with keywords only it uses, like its code, lecturer or topics (BIO101, mitosis, Krebs cycle). Skip generic words like "lecture" or "notes": they fit every subject.</p>
-              <a class="ghost step-link" href="./guide/#add-your-own-courses" data-umami-event="Guide: Own courses"><span>Keyword tips</span><svg class="arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4"/></svg></a>
+              <p>Every second, an <span class="model"><button type="button" class="model-term" aria-expanded="false" aria-describedby="model-webcam">on-device vision model</button><span class="model-card" role="tooltip" id="model-webcam"><span class="model-row"><b>YOLO11n</b> at 1 fps, bundled with the app.</span><span class="model-row">CoreML on Mac, ONNX Runtime on Windows. It looks for a person and a phone.</span></span></span> checks that you're there and looks for a phone. You are marked as distracted if you have your phone at hand or marked away if you are away.</p>
             </li>
           </ol>
           <p class="guide-cta"><a class="ghost" href="./guide/" data-umami-event="Guide: How it works"><span>Read the full guide</span><svg class="arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4"/></svg></a></p>
+
+          <p class="how-more">
+            <a class="ghost" href="https://github.com/AlperErg/larpless#how-it-works" rel="noopener" data-umami-event="GitHub: How it works"><span>The full pipeline in the README</span><svg class="arrow ext" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 3.5h-2a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-2M9 3h4v4M13 3L7.5 8.5"/></svg></a>
+          </p>
 
           <div class="stage" id="stage" data-tone="green">
             <div class="float" id="float">
