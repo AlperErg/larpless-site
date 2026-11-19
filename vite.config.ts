@@ -1,6 +1,8 @@
+import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { Marked } from 'marked';
 import { defineConfig, type Plugin } from 'vite';
 
@@ -17,9 +19,39 @@ const REPO_URL = `https://github.com/${APP_REPO}/blob/main/`;
 const DOCS_DIR = process.env.LARPLESS_DOCS?.trim() ? resolve(process.env.LARPLESS_DOCS.trim()) : undefined;
 const DOCS_REF = process.env.LARPLESS_DOCS_REF?.trim() || 'main';
 
+let docsCommit: Promise<string> | undefined;
+
+/**
+ * The commit DOCS_REF points at, once per process. raw.githubusercontent.com caches a branch's files for a few
+ * minutes, so a build triggered right after a push to PRIVACY.md could otherwise publish the old text; a commit's
+ * files never change. git ls-remote isn't rate-limited like the GitHub API.
+ */
+function resolveDocsCommit(): Promise<string> {
+  docsCommit ??= (async () => {
+    if (/^[0-9a-f]{40}$/i.test(DOCS_REF)) return DOCS_REF;
+    try {
+      const { stdout } = await promisify(execFile)(
+        'git',
+        ['ls-remote', `https://github.com/${APP_REPO}.git`, `refs/heads/${DOCS_REF}`],
+        { timeout: 30_000 },
+      );
+      const sha = stdout.split(/\s/)[0];
+      if (/^[0-9a-f]{40}$/.test(sha)) {
+        console.log(`legal: documents from ${APP_REPO}@${sha.slice(0, 12)} (${DOCS_REF})`);
+        return sha;
+      }
+    } catch {
+      // Not a branch, or git can't reach GitHub: fetch by name below.
+    }
+    console.warn(`legal: fetching ${APP_REPO}@${DOCS_REF} by name, which GitHub may serve a few minutes stale`);
+    return DOCS_REF;
+  })();
+  return docsCommit;
+}
+
 async function readDoc(file: string): Promise<string> {
   if (DOCS_DIR) return readFile(resolve(DOCS_DIR, file), 'utf8');
-  const url = `https://raw.githubusercontent.com/${APP_REPO}/${DOCS_REF}/${file}`;
+  const url = `https://raw.githubusercontent.com/${APP_REPO}/${await resolveDocsCommit()}/${file}`;
   const res = await fetch(url);
   // Never publish an empty or error page in place of the privacy policy: fail the build instead.
   if (!res.ok) throw new Error(`legal: ${url} returned ${res.status} ${res.statusText}`);
