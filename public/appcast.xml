@@ -6,6 +6,15 @@
     <description>LarpLess for macOS updates. Written by larpless/scripts/appcast.mjs; don't edit by hand.</description>
     <language>en</language>
     <item>
+      <title>LarpLess 0.2.1</title>
+      <pubDate>Fri, 20 Nov 2026 15:35:25 GMT</pubDate>
+      <sparkle:version>0.2.1</sparkle:version>
+      <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/AlperErg/larpless/releases/tag/v0.2.1</sparkle:fullReleaseNotesLink>
+      <enclosure url="https://github.com/AlperErg/larpless/releases/download/v0.2.1/LarpLess-0.2.1.dmg" length="48702411" type="application/octet-stream" sparkle:edSignature="E00V3T67wBYki83VS7ANhkHsJ+2Z7cenKL4oo5YLdXyLFVS9wJeFyOKlPsw/69ak51nP0M01CtpaK9AoS7HGCw=="/>
+    </item>
+    <item>
       <title>LarpLess 0.2.0</title>
       <pubDate>Sat, 14 Nov 2026 16:49:27 GMT</pubDate>
       <sparkle:version>0.2.0</sparkle:version>
