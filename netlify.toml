@@ -22,3 +22,13 @@
   from = "/_v/s.js"
   to = "https://cloud.umami.is/script.js"
   status = 200
+
+# Everything the site loads comes from its own domain (fonts, video, Umami via
+# /_v), so only same-origin scripts may run. This also keeps out Netlify's
+# injected inline scripts, the "Powered by Netlify" badge among them. Inline
+# style attributes stay allowed (index.html uses a few); JSON-LD isn't a script
+# CSP blocks. Anything new from another domain has to be listed here.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
