@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "mascot": "node scripts/mascot-animated.mjs"
   },
   "devDependencies": {
     "@fontsource/instrument-serif": "^5.3.0",
