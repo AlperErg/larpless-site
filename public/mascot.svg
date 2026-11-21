@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="110 170 804 764" width="804" height="764">
+  <!-- The LarpLess mascot: brand/larpless-icon.svg in the app repository, cropped to the artwork (no tile) for use beside the name. The eyes are holes, so the page shows through. -->
+  <defs><linearGradient id="body-fill" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#5BC98F"/><stop offset="1" stop-color="#2E9A69"/></linearGradient></defs>
+  <path transform="translate(0 42)" fill="#1F6B4B" d="M300,170 H724 A190,190 0 0 1 914,360 V570 A190,190 0 0 1 724,760 H300 A190,190 0 0 1 110,570 V360 A190,190 0 0 1 300,170 Z M432,700 H592 V850 H432 Z M352,812 H672 A40,40 0 0 1 672,892 H352 A40,40 0 0 1 352,812 Z M606,350 A48,48 0 0 0 558,398 V502 A48,48 0 0 0 606,550 A48,48 0 0 0 654,502 V398 A48,48 0 0 0 606,350 Z M770,350 A48,48 0 0 0 722,398 V502 A48,48 0 0 0 770,550 A48,48 0 0 0 818,502 V398 A48,48 0 0 0 770,350 Z"/>
+  <path fill="url(#body-fill)" d="M300,170 H724 A190,190 0 0 1 914,360 V570 A190,190 0 0 1 724,760 H300 A190,190 0 0 1 110,570 V360 A190,190 0 0 1 300,170 Z M432,700 H592 V850 H432 Z M352,812 H672 A40,40 0 0 1 672,892 H352 A40,40 0 0 1 352,812 Z M606,350 A48,48 0 0 0 558,398 V502 A48,48 0 0 0 606,550 A48,48 0 0 0 654,502 V398 A48,48 0 0 0 606,350 Z M770,350 A48,48 0 0 0 722,398 V502 A48,48 0 0 0 770,550 A48,48 0 0 0 818,502 V398 A48,48 0 0 0 770,350 Z"/>
+  <path d="M250,300 A150,150 0 0 1 380,232" fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="38" stroke-linecap="round"/>
+</svg>

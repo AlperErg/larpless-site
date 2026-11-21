@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="110 170 804 764" width="804" height="764">
+  <!-- The header mascot (mascot.svg) with the app's boot animation looping: it looks at you, blinks,
+       glances aside into the icon's pose, blinks again and looks back. The eyes are holes cut by one
+       mask, used by both the body and the slab under it, so the slab's lip shows at the top of each eye.
+       Reduced motion holds the icon's pose. -->
+  <style>
+    .look { animation: look 7s ease-in-out infinite; }
+    .eye { transform-box: fill-box; transform-origin: center; animation: blink 7s infinite; }
+    @keyframes look {
+      0%, 30% { transform: translateX(0); }
+      35%, 80% { transform: translateX(176px); }
+      86%, 100% { transform: translateX(0); }
+    }
+    @keyframes blink {
+      0%, 12.5%, 15.5%, 58.5%, 61.5%, 100% { transform: scale(1, 1); }
+      14%, 60% { transform: scale(1.17, 0.14); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .look, .eye { animation: none; }
+      .look { transform: translateX(176px); }
+    }
+  </style>
+  <defs>
+    <linearGradient id="body-fill" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#5BC98F"/><stop offset="1" stop-color="#2E9A69"/></linearGradient>
+    <mask id="holes" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <g class="look">
+        <rect class="eye" x="382" y="350" width="96" height="200" rx="48" fill="#000"/>
+        <rect class="eye" x="546" y="350" width="96" height="200" rx="48" fill="#000"/>
+      </g>
+    </mask>
+    <path id="outline" d="M300,170 H724 A190,190 0 0 1 914,360 V570 A190,190 0 0 1 724,760 H300 A190,190 0 0 1 110,570 V360 A190,190 0 0 1 300,170 Z M432,700 H592 V850 H432 Z M352,812 H672 A40,40 0 0 1 672,892 H352 A40,40 0 0 1 352,812 Z"/>
+  </defs>
+  <g transform="translate(0 42)"><use href="#outline" fill="#1F6B4B" mask="url(#holes)"/></g>
+  <use href="#outline" fill="url(#body-fill)" mask="url(#holes)"/>
+  <path d="M250,300 A150,150 0 0 1 380,232" fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="38" stroke-linecap="round"/>
+</svg>

@@ -257,9 +257,17 @@ a:hover {
 }
 
 .brand img {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
+  width: auto;
+  height: 22px;
+}
+
+/* The mascot in front of the hero title, sized in em so it follows every breakpoint's font size.
+   Its foot sits a little under the baseline, as in the logo lockup. */
+h1 .mascot {
+  height: 0.78em;
+  width: auto;
+  margin-right: 0.14em;
+  vertical-align: -0.06em;
 }
 
 .nav {
